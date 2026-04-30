@@ -1,0 +1,45 @@
+name: side-quest-oracle
+
+on:
+  schedule:
+    # Every 2 hours, 9am-4pm Pacific.
+    # Each tick has a 50% chance to actually send (set in quest.py).
+    # Result: roughly 2-3 quests per day, at unpredictable times.
+    - cron: '0 9-15/2 * * *'
+      timezone: 'America/Los_Angeles'
+    - cron: '30 9-15/2 * * *'
+      timezone: 'America/Los_Angeles'
+  workflow_dispatch: # lets you trigger manually from GitHub UI for testing
+
+# Prevent overlapping runs
+concurrency:
+  group: quest-oracle
+  cancel-in-progress: false
+
+permissions:
+  contents: write  # needed to commit the log back
+
+jobs:
+  send-quest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run oracle
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python quest.py
+
+      - name: Commit log
+        run: |
+          git config user.name "side-quest-bot"
+          git config user.email "bot@example.com"
+          git add .quest_log.jsonl .pending_rewards.json 2>/dev/null || true
+          git diff --quiet --staged || git commit -m "log: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push || true
