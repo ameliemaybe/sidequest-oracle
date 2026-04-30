@@ -12,6 +12,7 @@ Runs on GitHub Actions cron. Each invocation:
 import os
 import json
 import random
+random.seed()
 import datetime
 import urllib.request
 import urllib.error
@@ -25,7 +26,7 @@ ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 # Probability the bot actually fires this run. Lower = rarer = more lottery-like.
 # Cron runs every 90 min during waking hours (set in workflow).
 # 0.5 means roughly half of those runs send a quest = ~3-4 quests per day.
-FIRE_PROBABILITY = 0.5
+FIRE_PROBABILITY = 0.7
 
 DOMAINS = ["tarot", "music", "reading", "language", "curiosity", "movement"]
 ENERGY_LEVELS = ["low", "medium", "high"]
